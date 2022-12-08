@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.25.0"
+
+[[bin]]
+edition = "2021"
+name = "stenoedit"
+path = "src/main.rs"
+
