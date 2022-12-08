@@ -53,7 +53,6 @@ fn main() {
         
     }
 }
-//stdout().execute(MoveTo(x,y)).unwrap();
 
 
 
