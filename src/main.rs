@@ -15,6 +15,7 @@ impl RawMode {
 impl Drop for RawMode {
     fn drop(&mut self) {
         stdout().execute(Clear(ClearType::All)).unwrap();
+        stdout().execute(MoveTo(0,0)).unwrap();
         terminal::disable_raw_mode().unwrap();
     }
 }
