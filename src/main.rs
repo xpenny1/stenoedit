@@ -42,6 +42,7 @@ enum Command {
 
 struct BufferState {
     text: String,
+    position: (u16,u16)
 }
 
 fn draw_frame() {
@@ -102,7 +103,7 @@ fn main() {
 //        }
 //    }
     let _raw_mode: RawMode = RawMode::enable();
-    let init_state: BufferState = BufferState { text: "".to_owned() };
+    let init_state: BufferState = BufferState { text: "".to_owned(), position: (1,1) };
     let mut buffer_state = init_state;
     let mut command: Command = Command::SwichMode(Mode::Normal);
     while command != Command::Exit {
@@ -138,9 +139,17 @@ fn refresh() {
     stdout().execute(MoveRight(1)).unwrap().execute(MoveLeft(1)).unwrap(); 
 }
 
-fn normal_mode(bstate: BufferState) -> (Command, BufferState) {
+impl BufferState {
+   fn update_position(mut self) -> BufferState {
+       self.position = crossterm::cursor::position().unwrap();
+       self
+   }
+}
+
+fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
     draw_frame();
     stdout().execute(DisableBlinking).unwrap();
+    stdout().execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
     loop {
         if poll(Duration::from_millis(500)).unwrap() {
             let event: crossterm::event::Event = crossterm::event::read().unwrap();
@@ -148,14 +157,12 @@ fn normal_mode(bstate: BufferState) -> (Command, BufferState) {
                return (Command::Exit, bstate); 
             }
             if let Some(c) = get_char(&event) {
-//               print!("{}",c);
-//               refresh();
                match c {
                   'h' => {stdout().execute(MoveLeft(1)).unwrap();},
                   'j' => {stdout().execute(MoveDown(1)).unwrap();},
                   'k' => {stdout().execute(MoveUp(1)).unwrap();},
                   'l' => {stdout().execute(MoveRight(1)).unwrap();},
-                  'i' => return (Command::SwichMode(Mode::Insert), bstate),
+                  'i' => return (Command::SwichMode(Mode::Insert), bstate.update_position()),
                   _ => {}
                }
             }
@@ -163,8 +170,9 @@ fn normal_mode(bstate: BufferState) -> (Command, BufferState) {
     }
 } 
 
-fn insert_mode(bstate: BufferState) -> (Command, BufferState) {
+fn insert_mode(mut bstate: BufferState) -> (Command, BufferState) {
     draw_frame();
+    stdout().execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
     stdout().execute(EnableBlinking).unwrap();
     loop {
         if poll(Duration::from_millis(500)).unwrap() {
@@ -174,11 +182,12 @@ fn insert_mode(bstate: BufferState) -> (Command, BufferState) {
             }
             if let Some(c) = get_char(&event) {
                print!("{}",c);
+               bstate = bstate.update_position();
                refresh();
             }
             if let crossterm::event::Event::Key(k) = event {
                 if k.code == crossterm::event::KeyCode::Esc {
-                   return (Command::SwichMode(Mode::Normal), bstate); 
+                   return (Command::SwichMode(Mode::Normal), bstate.update_position()); 
                 }
             }
         }
