@@ -5,6 +5,7 @@ use device_query::{DeviceQuery, DeviceState, Keycode};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
+use std::fs::read_to_string;
 use std::io::Read;
 use std::io::{self, stdout};
 use std::string::String;
@@ -52,9 +53,9 @@ fn draw_frame() {
 }
 
 //fn generate_map() {
-//    env::set_var("OUT_DIR", "src");
+//    env::set_var("OUT_DIR", "data");
 //    let data: HashMap<String, String> = serde_json::from_str::<HashMap<String, Value>>(
-//        include_str!("palantype-DE.json"), /* "{\"x\":\"y\"}"*/
+//        include_str!("../data/palantype-DE.json"), /* "{\"x\":\"y\"}"*/
 //    ) //        "{
 //    .unwrap()
 //    .into_iter()
@@ -68,13 +69,29 @@ fn draw_frame() {
 //    .collect();
 //    uneval::to_out_dir(data, "data.rs").unwrap();
 //}
+//
+//fn load_map() -> HashMap<String, String> {
+//    include!("../data/data.rs");
+//}
 
-fn load_map() -> HashMap<String, String> {
-    include!("data.rs");
+fn load_data() -> HashMap<String, String> {
+    serde_json::from_str::<HashMap<String, Value>>(&read_to_string("./data/palantype-DE.json").unwrap()) 
+    .unwrap()
+    .into_iter()
+    .map(|(x, y): (String, Value)| {
+        if let Value::String(s) = y {
+            (x, s)
+        } else {
+            panic!("JSON");
+        }
+    })
+    .collect()
 }
 
 fn main() {
-    let data = load_map();
+//    let data = load_map();
+//    generate_map();
+    let data = load_data();
     let _raw_mode = RawMode::enable();
     draw_frame();
     let mut buffer = [0; 1];
