@@ -2,9 +2,12 @@ use crossterm::cursor::{MoveDown, MoveLeft, MoveRight, MoveTo};
 use crossterm::terminal::{size, Clear, ClearType};
 use crossterm::{terminal, ExecutableCommand};
 use device_query::{DeviceQuery, DeviceState, Keycode};
+use serde_json::Value;
+use std::collections::HashMap;
+use std::env;
 use std::io::Read;
 use std::io::{self, stdout};
-
+use std::string::String;
 struct RawMode;
 impl RawMode {
     pub fn enable() -> RawMode {
@@ -19,6 +22,16 @@ impl Drop for RawMode {
         stdout().execute(MoveTo(0, 0)).unwrap();
         terminal::disable_raw_mode().unwrap();
     }
+}
+
+enum Mode {
+    Normal,
+    Insert,
+    Steno,
+}
+
+enum Command {
+    SwichMode(Mode),
 }
 
 fn draw_frame() {
@@ -38,7 +51,30 @@ fn draw_frame() {
     stdout().execute(MoveTo(1, 1)).unwrap();
 }
 
+//fn generate_map() {
+//    env::set_var("OUT_DIR", "src");
+//    let data: HashMap<String, String> = serde_json::from_str::<HashMap<String, Value>>(
+//        include_str!("palantype-DE.json"), /* "{\"x\":\"y\"}"*/
+//    ) //        "{
+//    .unwrap()
+//    .into_iter()
+//    .map(|(x, y): (String, Value)| {
+//        if let Value::String(s) = y {
+//            (x, s)
+//        } else {
+//            panic!("JSON");
+//        }
+//    })
+//    .collect();
+//    uneval::to_out_dir(data, "data.rs").unwrap();
+//}
+
+fn load_map() -> HashMap<String, String> {
+    include!("data.rs");
+}
+
 fn main() {
+    let data = load_map();
     let _raw_mode = RawMode::enable();
     draw_frame();
     let mut buffer = [0; 1];
