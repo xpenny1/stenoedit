@@ -67,41 +67,6 @@ fn main() {
 //    let data = load_map();
 //    generate_map();
 //    let data = load_data();
-//    let _raw_mode = RawMode::enable();
-//    draw_frame();
-//    let mut buffer = [0; 1];
-//    while io::stdin().read(&mut buffer).unwrap() == 1 && buffer != [b'q'] && buffer != [b's'] {
-//        let input_char = buffer[0] as char;
-//        if input_char == '\n' || input_char == '\r' {
-//            print!("{}", input_char);
-//            stdout()
-//                .execute(MoveDown(1))
-//                .unwrap()
-//                .execute(MoveRight(1))
-//                .unwrap();
-//        } else {
-//            print!("{}", input_char);
-//            stdout().execute(MoveRight(1)).unwrap();
-//            stdout().execute(MoveLeft(1)).unwrap();
-//        }
-//    }
-//    if buffer != [b'q'] {
-//        let mut keys: Vec<Keycode> = Vec::new();
-//        while keys != vec![Keycode::Q] {
-//            // stdout().execute(Clear(ClearType::All)).unwrap();
-//            //            draw_frame();
-//            let keys2 = DeviceState::new().get_keys();
-//            if keys2 != keys {
-//                stdout().execute(Clear(ClearType::All)).unwrap();
-//                draw_frame();
-//                for key in keys2 {
-//                    println!("{}\r", key);
-//                    stdout().execute(MoveRight(1)).unwrap();
-//                }
-//            }
-//            keys = DeviceState::new().get_keys();
-//        }
-//    }
     let _raw_mode: RawMode = RawMode::enable();
     let init_state: BufferState = BufferState { text: "".to_owned(), position: (1,1) };
     let mut buffer_state = init_state;
@@ -110,9 +75,26 @@ fn main() {
         match command {
             Command::SwichMode(Mode::Normal) => {let (c,s) = normal_mode(buffer_state); buffer_state = s; command = c;}
             Command::SwichMode(Mode::Insert) => {let (c,s) = insert_mode(buffer_state); buffer_state = s; command = c;}
+            Command::SwichMode(Mode::Steno) => {let (c,s) = steno_mode(buffer_state); buffer_state = s; command = c;}
             _ => {command = Command::Exit;}
         }
     }
+}
+
+fn steno_mode(mut buffer_state: BufferState) -> (Command, BufferState) {
+    let mut keys = Vec::new();
+    while keys != vec![Keycode::Escape] {
+    if poll(Duration::from_millis(500)).unwrap() {
+        if keys != DeviceState::new().get_keys() {
+            for key in &keys {
+                print!("{}", key);
+            }
+            keys = DeviceState::new().get_keys();
+        }
+    }
+    }
+    (Command::SwichMode(Mode::Normal),buffer_state.update_position())
+
 }
 
 fn is_key_press(e: &crossterm::event::Event,key: char) -> bool {
@@ -163,6 +145,7 @@ fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
                   'k' => {stdout().execute(MoveUp(1)).unwrap();},
                   'l' => {stdout().execute(MoveRight(1)).unwrap();},
                   'i' => return (Command::SwichMode(Mode::Insert), bstate.update_position()),
+                  's' => return (Command::SwichMode(Mode::Steno), bstate.update_position()),
                   _ => {}
                }
             }
@@ -177,12 +160,12 @@ fn insert_mode(mut bstate: BufferState) -> (Command, BufferState) {
     loop {
         if poll(Duration::from_millis(500)).unwrap() {
             let event: crossterm::event::Event = crossterm::event::read().unwrap();
-            if is_key_press(&event, 'q') {
-               return (Command::Exit, bstate); 
-            }
+//            if is_key_press(&event, 'q') {
+//               return (Command::Exit, bstate); 
+//            }
             if let Some(c) = get_char(&event) {
                print!("{}",c);
-               bstate = bstate.update_position();
+//               bstate = bstate.update_position();
                refresh();
             }
             if let crossterm::event::Event::Key(k) = event {
