@@ -5,7 +5,7 @@ use crossterm::terminal::{size, Clear, ClearType, EnableLineWrap};
 use crossterm::{terminal, ExecutableCommand, style, execute};
 use device_query::{DeviceQuery, DeviceState, Keycode};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 //use std::env;
 use std::fs::read_to_string;
 use std::io::Read;
@@ -83,18 +83,35 @@ fn main() {
 }
 
 fn steno_mode(mut buffer_state: BufferState) -> (Command, BufferState) {
-    let mut keys = Vec::new();
-    while keys != vec![Keycode::Escape] {
-    if poll(Duration::from_millis(500)).unwrap() {
-        if keys != DeviceState::new().get_keys() {
-            for key in &keys {
-                print!("{}", key);
-            }
-            keys = DeviceState::new().get_keys();
+//    let mut keys = Vec::new();
+//    while keys != vec![Keycode::Escape] {
+//    if poll(Duration::from_millis(500)).unwrap() {
+//        if keys != DeviceState::new().get_keys() {
+//            for key in &keys {
+//                stdout().execute(style::Print(key));
+//            }
+//            keys = DeviceState::new().get_keys();
+//        }
+//    }
+//    }
+    while !DeviceState::new().get_keys().contains(&Keycode::S) {}
+    loop {
+    let mut keys: HashSet<Keycode> = HashSet::new();
+    let mut new_keys = DeviceState::new().get_keys();
+    while new_keys != vec![] {
+        for key in &new_keys {
+             keys.insert(*key); 
+         }
+        new_keys = DeviceState::new().get_keys(); 
+    }
+    if keys.contains(&Keycode::Escape){
+       return (Command::SwichMode(Mode::Normal),buffer_state.update_position());
+    } else {
+        for key in keys {
+            stdout().execute(style::Print(key)).unwrap();
         }
     }
     }
-    (Command::SwichMode(Mode::Normal),buffer_state.update_position())
 
 }
 
@@ -131,6 +148,9 @@ impl BufferState {
 
 fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
     draw_frame();
+    while poll(Duration::from_millis(500)).unwrap() {
+        crossterm::event::read();
+    }
     let mut stdout = stdout();
     stdout.execute(DisableBlinking).unwrap().execute(cursor::SetCursorShape(CursorShape::Block)).unwrap();
     stdout.execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
