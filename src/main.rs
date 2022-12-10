@@ -1,7 +1,8 @@
-use crossterm::cursor::{MoveDown, MoveLeft, MoveRight, MoveTo, DisableBlinking, EnableBlinking, MoveUp};
+use crossterm::cursor::{MoveDown, MoveLeft, MoveRight, MoveTo, DisableBlinking, EnableBlinking, MoveUp, self, CursorShape};
 use crossterm::event::poll;
+use crossterm::style::{Stylize, Print, PrintStyledContent, ResetColor};
 use crossterm::terminal::{size, Clear, ClearType, EnableLineWrap};
-use crossterm::{terminal, ExecutableCommand};
+use crossterm::{terminal, ExecutableCommand, style, execute};
 use device_query::{DeviceQuery, DeviceState, Keycode};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -130,8 +131,9 @@ impl BufferState {
 
 fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
     draw_frame();
-    stdout().execute(DisableBlinking).unwrap();
-    stdout().execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
+    let mut stdout = stdout();
+    stdout.execute(DisableBlinking).unwrap().execute(cursor::SetCursorShape(CursorShape::Block)).unwrap();
+    stdout.execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
     loop {
         if poll(Duration::from_millis(500)).unwrap() {
             let event: crossterm::event::Event = crossterm::event::read().unwrap();
@@ -140,10 +142,12 @@ fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
             }
             if let Some(c) = get_char(&event) {
                match c {
-                  'h' => {stdout().execute(MoveLeft(1)).unwrap();},
-                  'j' => {stdout().execute(MoveDown(1)).unwrap();},
-                  'k' => {stdout().execute(MoveUp(1)).unwrap();},
-                  'l' => {stdout().execute(MoveRight(1)).unwrap();},
+                  'h' => {stdout.execute(MoveLeft(1)).unwrap();},
+                  'j' => {stdout.execute(MoveDown(1)).unwrap();},
+                  'k' => {stdout.execute(MoveUp(1)).unwrap();},
+                  'l' => {stdout.execute(MoveRight(1)).unwrap();},
+                  '0' => {stdout.execute(MoveTo(1,crossterm::cursor::position().unwrap().1)).unwrap();},
+                  '$' => {stdout.execute(MoveTo(crossterm::terminal::size().unwrap().0 - 2,crossterm::cursor::position().unwrap().1)).unwrap();},
                   'i' => return (Command::SwichMode(Mode::Insert), bstate.update_position()),
                   's' => return (Command::SwichMode(Mode::Steno), bstate.update_position()),
                   _ => {}
@@ -155,18 +159,38 @@ fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
 
 fn insert_mode(mut bstate: BufferState) -> (Command, BufferState) {
     draw_frame();
-    stdout().execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
-    stdout().execute(EnableBlinking).unwrap();
+    let mut stdout = stdout();
+    stdout.execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
+    stdout.execute(EnableBlinking).unwrap().execute(cursor::SetCursorShape(CursorShape::Line)).unwrap();
     loop {
         if poll(Duration::from_millis(500)).unwrap() {
             let event: crossterm::event::Event = crossterm::event::read().unwrap();
 //            if is_key_press(&event, 'q') {
 //               return (Command::Exit, bstate); 
 //            }
+//               stdout.execute(style::Print(format!("{:?}",event))).unwrap();
             if let Some(c) = get_char(&event) {
-               print!("{}",c);
+//               print!("{}",c);
+//               stdout.execute(MoveDown(1)).unwrap();
+//               stdout.execute(MoveLeft(1)).unwrap();
+//               stdout.execute(style::PrintStyledContent("█".dark_magenta())).unwrap();
+//               stdout.execute(style::PrintStyledContent(c.white())).unwrap();
+//               stdout.execute(style::Print(c)).unwrap();
+//               stdout.execute(MoveUp(1)).unwrap();
 //               bstate = bstate.update_position();
-               refresh();
+//               refresh();
+                execute!(stdout,
+                         Print(c),
+                         MoveLeft(1),
+                         MoveDown(1),
+                         PrintStyledContent(c.dark_green()),
+                         MoveUp(1),
+                         MoveLeft(1),
+                         MoveUp(1),
+                         PrintStyledContent(c.dark_magenta()),
+                         MoveDown(1),
+                         ResetColor
+                         );
             }
             if let crossterm::event::Event::Key(k) = event {
                 if k.code == crossterm::event::KeyCode::Esc {
