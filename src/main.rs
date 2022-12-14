@@ -8,10 +8,11 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 //use std::env;
 use std::fs::read_to_string;
-use std::io::Read;
+use std::io::{Read, stdin};
 use std::io::{self, stdout};
 use std::string::String;
 use std::time::Duration;
+
 struct RawMode;
 impl RawMode {
     pub fn enable() -> RawMode {
@@ -63,11 +64,25 @@ fn draw_frame() {
     stdout().execute(MoveTo(1, 1)).unwrap();
 }
 
+mod phf;
+
+//static DATA2: phf::Map<&'static str, &str> = phf_map! {
+//    "hallo" => "bye",
+//    "bye" => "hallo",
+//    "123" => "456",
+//};
 
 fn main() {
 //    let data = load_map();
 //    generate_map();
 //    let data = load_data();
+    let mut r: String = String::new();
+    loop {
+        stdin().read_line(&mut r).unwrap();
+        println!("{:?}", phf::DATA.get(r.trim()));
+        r = "".to_owned();
+        r = "".to_owned();
+    }
     let _raw_mode: RawMode = RawMode::enable();
     let init_state: BufferState = BufferState { text: "".to_owned(), position: (1,1) };
     let mut buffer_state = init_state;
