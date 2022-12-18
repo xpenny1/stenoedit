@@ -64,7 +64,6 @@ fn draw_frame() {
     stdout().execute(MoveTo(1, 1)).unwrap();
 }
 
-mod phf;
 
 //static DATA2: phf::Map<&'static str, &str> = phf_map! {
 //    "hallo" => "bye",
@@ -72,14 +71,20 @@ mod phf;
 //    "123" => "456",
 //};
 
+include!("../data/codegens.rs");
+
 fn main() {
 //    let data = load_map();
 //    generate_map();
 //    let data = load_data();
+//    for (k,v) in DATA.to_iter() {
+//        println("key: {k}, value: {v}");
+//    }
+    println!("{:?}", DATA);
     let mut r: String = String::new();
     loop {
         stdin().read_line(&mut r).unwrap();
-        println!("{:?}", phf::DATA.get(r.trim()));
+        println!("{:?}", DATA.get(r.trim()));
         r = "".to_owned();
         r = "".to_owned();
     }

@@ -2,6 +2,7 @@
 name = "stenoedit"
 version = "0.1.0"
 edition = "2021"
+build = "src/build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,8 +10,13 @@ edition = "2021"
 crossterm = "0.25.0"
 device_query = "1.1.1"
 phf = {version = "0.11.1", features = ["macros"]}
+phf_codegen = "0.11.1"
 serde_json = "1.0.89"
 uneval = "0.2.4"
+
+[build-dependencies]
+serde_json = "1.0.89"
+phf_codegen = "0.11.1"
 
 [[bin]]
 edition = "2021"
