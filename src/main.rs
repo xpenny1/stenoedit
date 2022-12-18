@@ -80,14 +80,14 @@ fn main() {
 //    for (k,v) in DATA.to_iter() {
 //        println("key: {k}, value: {v}");
 //    }
-    println!("{:?}", DATA);
-    let mut r: String = String::new();
-    loop {
-        stdin().read_line(&mut r).unwrap();
-        println!("{:?}", DATA.get(r.trim()));
-        r = "".to_owned();
-        r = "".to_owned();
-    }
+//    println!("{:?}", DATA);
+//    let mut r: String = String::new();
+//    loop {
+//        stdin().read_line(&mut r).unwrap();
+//        println!("{:?}", DATA.get(r.trim()));
+//        r = "".to_owned();
+//        r = "".to_owned();
+//    }
     let _raw_mode: RawMode = RawMode::enable();
     let init_state: BufferState = BufferState { text: "".to_owned(), position: (1,1) };
     let mut buffer_state = init_state;

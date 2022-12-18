@@ -3,6 +3,7 @@ use phf_codegen;
 use serde_json::Value;
 use std::fs::read_to_string;
 use std::io::{Write};
+use std::collections::{HashSet};
 
 
 fn main() {
@@ -13,32 +14,56 @@ fn main() {
     }
 }
 
+fn convert(c: char) -> String {
+    match c {
+        'ʃ' => "SCH".to_owned(),
+        'Ä' => "AE".to_owned(),
+        'Ö' => "OE".to_owned(),
+        'Ü' => "UE".to_owned(),
+        '+' => "P".to_owned(),
+        '~' => "T".to_owned(),
+        '-' => "MI".to_owned(),
+        x   => format!("{c}")
+    }
+}
+
 fn generate() {
     env::set_var("OUT_DIR", "data");
     let path = Path::new(&env::var("OUT_DIR").unwrap()).join("codegens.rs");
     let mut file = BufWriter::new(File::create(&path).unwrap());
     let data = load_data();
-//    let mut map = phf_codegen::Map::<String,String,"../data/codegens.rs">;
-//    let mut map = phf_codegen::Map {keys: String, values: String, path: "../data/codegens.rs".to_owned()};
-//    let mut map = phf_codegen::Map::<&[u8]>::new();
     let mut map = phf_codegen::Map::<String>::new();
-    for (inp,outp) in data.into_iter() {
-        let out: String = format!("\"{}\"",outp);
-        map.entry(inp,&out);
+    let mut set: HashMap::<char,phf_codegen::Map<String>> = HashMap::new();
+    for (inp,outp) in data.iter() {
+        let c: char  = inp.chars().into_iter().next().unwrap();
+        if set.contains_key(&c) {
+            let out: String = format!("\"{}\"",outp);
+            set.get_mut(&c).unwrap().entry(inp.to_string(),&out);
+        } else {
+            set.insert(c,phf_codegen::Map::<String>::new());
+            let out: String = format!("\"{}\"",outp);
+            set.get_mut(&c).unwrap().entry(inp.to_string(),&out);
+        }
     }
+    for (c,map) in set.into_iter() {
     writeln!(
         &mut file,
-        "static DATA: phf::Map<&'static str, &str> = \n{};\n",
-        map.build()).unwrap();
+        "static DATA{}: phf::Map<&'static str, &str> = \n{};\n",
+        convert(c),
+        map.build()).unwrap()
+    }
+//    for (inp,outp) in data.iter() {
+//        map.entry(inp.to_string(),outp);
+//    }
+//    writeln!(
+//        &mut file,
+//        "static DATA: phf::Map<&'static str, &str> = \n{};\n",
+//        map.build()).unwrap();
 }
 
-//fn load_data() -> HashMap<String, String> {
-//    HashMap::new()
-//}
 fn load_data() -> HashMap<String, String> {
     serde_json::from_str::<HashMap<String, Value>>
         (
-//            &read_to_string("./data/palantype-DE.json").unwrap()
                 include_str!("../data/phf.json")
             ) 
     .unwrap()
