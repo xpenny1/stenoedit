@@ -13,6 +13,8 @@ use std::io::{self, stdout};
 use std::string::String;
 use std::time::Duration;
 
+mod modes;
+
 struct RawMode;
 impl RawMode {
     pub fn enable() -> RawMode {
@@ -21,6 +23,7 @@ impl RawMode {
         RawMode
     }
 }
+
 impl Drop for RawMode {
     fn drop(&mut self) {
         stdout().execute(Clear(ClearType::All)).unwrap();
@@ -78,16 +81,19 @@ fn main() {
 //    generate_map();
 //    let data = load_data();
 //    for (k,v) in DATA.to_iter() {
-//        println("key: {k}, value: {v}");
+//        println!("key: {k}, value: {v}");
 //    }
-//    println!("{:?}", DATA);
-//    let mut r: String = String::new();
-//    loop {
-//        stdin().read_line(&mut r).unwrap();
-//        println!("{:?}", DATA.get(r.trim()));
-//        r = "".to_owned();
-//        r = "".to_owned();
-//    }
+//    for DATA in DATAARR.entries().iter() {
+    for i in 0..DATAARR.len() {
+    println!("{:?}", DATAARR[i]);
+    }
+    let mut r: String = String::new();
+    loop {
+        stdin().read_line(&mut r).unwrap();
+        println!("{:?}", DATAA.get(r.trim()));
+        r = "".to_owned();
+        r = "".to_owned();
+    }
     let _raw_mode: RawMode = RawMode::enable();
     let init_state: BufferState = BufferState { text: "".to_owned(), position: (1,1) };
     let mut buffer_state = init_state;
@@ -197,49 +203,6 @@ fn normal_mode(mut bstate: BufferState) -> (Command, BufferState) {
     }
 } 
 
-fn insert_mode(mut bstate: BufferState) -> (Command, BufferState) {
-    draw_frame();
-    let mut stdout = stdout();
-    stdout.execute(MoveTo(bstate.position.0,bstate.position.1)).unwrap();
-    stdout.execute(EnableBlinking).unwrap().execute(cursor::SetCursorShape(CursorShape::Line)).unwrap();
-    loop {
-        if poll(Duration::from_millis(500)).unwrap() {
-            let event: crossterm::event::Event = crossterm::event::read().unwrap();
-//            if is_key_press(&event, 'q') {
-//               return (Command::Exit, bstate); 
-//            }
-//               stdout.execute(style::Print(format!("{:?}",event))).unwrap();
-            if let Some(c) = get_char(&event) {
-//               print!("{}",c);
-//               stdout.execute(MoveDown(1)).unwrap();
-//               stdout.execute(MoveLeft(1)).unwrap();
-//               stdout.execute(style::PrintStyledContent("█".dark_magenta())).unwrap();
-//               stdout.execute(style::PrintStyledContent(c.white())).unwrap();
-//               stdout.execute(style::Print(c)).unwrap();
-//               stdout.execute(MoveUp(1)).unwrap();
-//               bstate = bstate.update_position();
-//               refresh();
-                execute!(stdout,
-                         Print(c),
-                         MoveLeft(1),
-                         MoveDown(1),
-                         PrintStyledContent(c.dark_green()),
-                         MoveUp(1),
-                         MoveLeft(1),
-                         MoveUp(1),
-                         PrintStyledContent(c.dark_magenta()),
-                         MoveDown(1),
-                         ResetColor
-                         );
-            }
-            if let crossterm::event::Event::Key(k) = event {
-                if k.code == crossterm::event::KeyCode::Esc {
-                   return (Command::SwichMode(Mode::Normal), bstate.update_position()); 
-                }
-            }
-        }
-    }
-}
 
 fn load_data() -> HashMap<String, String> {
     serde_json::from_str::<HashMap<String, Value>>(&read_to_string("./data/palantype-DE.json").unwrap()) 
