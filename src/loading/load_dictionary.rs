@@ -1,13 +1,9 @@
-//struct stroke {
-//    v: bool,
-//    s: bool
-//}
+use std::{collections::HashMap, fs::read_to_string};
 
-use std::{collections::HashMap, fs::read_to_string, io::stdin};
-
+#[allow(nonstandard_style)]
 #[allow(dead_code)]
 #[derive(Debug)]
-enum Key {
+pub (crate) enum Key {
     v = (1 << 0),
     Dl = (1 << 1),
     b = (1 << 2),
@@ -18,12 +14,12 @@ enum Key {
     Nl = (1 << 7),
     Bl = (1 << 8),
     Ml = (1 << 9),
-    PLUSl = (1 << 10),
+    PlusL = (1 << 10),
     Ll = (1 << 11),
     Ä = (1 << 12),
     E = (1 << 13),
     A = (1 << 14),
-    TILDE = (1 << 15),
+    Tilde = (1 << 15),
     U = (1 << 16),
     I = (1 << 17),
     O = (1 << 18),
@@ -42,11 +38,11 @@ enum Key {
     s = (1 << 31),
 }
 
-type Stroke = u32;
+pub (crate) type Stroke = u32;
 
-type Entry = (Vec<Stroke>, String);
+pub (crate) type Entry = (Vec<Stroke>, String);
 
-fn string_to_stroke(s: &str) -> Stroke {
+pub (crate) fn string_to_stroke(s: &str) -> Stroke {
     let mut i = 0;
     let mut stroke = 0;
     let cs: Vec<char> = s.chars().collect();
@@ -54,40 +50,40 @@ fn string_to_stroke(s: &str) -> Stroke {
         //match left
         match cs[i] {
             'v' => {
-                stroke = stroke | Key::v as u32;
+                stroke |= Key::v as u32;
             }
             'D' => {
-                stroke = stroke | Key::Dl as u32;
+                stroke |= Key::Dl as u32;
             }
             'b' => {
-                stroke = stroke | Key::b as u32;
+                stroke |= Key::b as u32;
             }
             'ʃ' => {
-                stroke = stroke | Key::SCHl as u32;
+                stroke |= Key::SCHl as u32;
             }
             'S' => {
-                stroke = stroke | Key::Sl as u32;
+                stroke |= Key::Sl as u32;
             }
             'F' => {
-                stroke = stroke | Key::Fl as u32;
+                stroke |= Key::Fl as u32;
             }
             'G' => {
-                stroke = stroke | Key::Gl as u32;
+                stroke |= Key::Gl as u32;
             }
             'N' => {
-                stroke = stroke | Key::Nl as u32;
+                stroke |= Key::Nl as u32;
             }
             'B' => {
-                stroke = stroke | Key::Bl as u32;
+                stroke |= Key::Bl as u32;
             }
             'M' => {
-                stroke = stroke | Key::Ml as u32;
+                stroke |= Key::Ml as u32;
             }
             '+' => {
-                stroke = stroke | Key::PLUSl as u32;
+                stroke |= Key::PlusL as u32;
             }
             'L' => {
-                stroke = stroke | Key::Ll as u32;
+                stroke |= Key::Ll as u32;
             }
             c => {
                 println!("LEFT");
@@ -102,28 +98,28 @@ fn string_to_stroke(s: &str) -> Stroke {
         //match middle
         match cs[i] {
             'Ä' => {
-                stroke = stroke | Key::Ä as u32;
+                stroke |= Key::Ä as u32;
             }
             'E' => {
-                stroke = stroke | Key::E as u32;
+                stroke |= Key::E as u32;
             }
             'A' => {
-                stroke = stroke | Key::A as u32;
+                stroke |= Key::A as u32;
             }
             '~' => {
-                stroke = stroke | Key::TILDE as u32;
+                stroke |= Key::Tilde as u32;
             }
             'U' => {
-                stroke = stroke | Key::U as u32;
+                stroke |= Key::U as u32;
             }
             'I' => {
-                stroke = stroke | Key::I as u32;
+                stroke |= Key::I as u32;
             }
             'O' => {
-                stroke = stroke | Key::O as u32;
+                stroke |= Key::O as u32;
             }
             'Ü' => {
-                stroke = stroke | Key::Ü as u32;
+                stroke |= Key::Ü as u32;
             }
             '-' => {}
             c => {
@@ -139,40 +135,40 @@ fn string_to_stroke(s: &str) -> Stroke {
         //match end
         match cs[i] {
             'M' => {
-                stroke = stroke | Key::Mr as u32;
+                stroke |= Key::Mr as u32;
             }
             '+' => {
-                stroke = stroke | Key::PLUSr as u32;
+                stroke |= Key::PLUSr as u32;
             }
             'L' => {
-                stroke = stroke | Key::Lr as u32;
+                stroke |= Key::Lr as u32;
             }
             'G' => {
-                stroke = stroke | Key::Gr as u32;
+                stroke |= Key::Gr as u32;
             }
             'N' => {
-                stroke = stroke | Key::Nr as u32;
+                stroke |= Key::Nr as u32;
             }
             'B' => {
-                stroke = stroke | Key::Br as u32;
+                stroke |= Key::Br as u32;
             }
             'ʃ' => {
-                stroke = stroke | Key::SCHr as u32;
+                stroke |= Key::SCHr as u32;
             }
             'S' => {
-                stroke = stroke | Key::Sr as u32;
+                stroke |= Key::Sr as u32;
             }
             'F' => {
-                stroke = stroke | Key::Fr as u32;
+                stroke |= Key::Fr as u32;
             }
             'n' => {
-                stroke = stroke | Key::n as u32;
+                stroke |= Key::n as u32;
             }
             'D' => {
-                stroke = stroke | Key::Dr as u32;
+                stroke |= Key::Dr as u32;
             }
             's' => {
-                stroke = stroke | Key::s as u32;
+                stroke |= Key::s as u32;
             }
             c => {
                 println!("END");
@@ -181,16 +177,16 @@ fn string_to_stroke(s: &str) -> Stroke {
                 panic!("invalid key: {c}");
             }
         }
-        i = i + 1;
+        i += 1;
     }
     stroke
 }
 
-fn string_to_strokes(s: &str) -> Vec<Stroke> {
+pub (crate) fn string_to_strokes(s: &str) -> Vec<Stroke> {
     s.split('/').map(string_to_stroke).collect()
 }
 
-fn string_to_entry(s: &str) -> Entry {
+pub (crate) fn string_to_entry(s: &str) -> Entry {
     let mut xs = s.split('\"');
     (
         {
@@ -204,8 +200,8 @@ fn string_to_entry(s: &str) -> Entry {
     )
 }
 
-fn read_file() -> HashMap<Vec<Stroke>, String> {
-    let mut s = read_to_string("palantype-DE.json").unwrap();
+pub (crate) fn read_file(file_name: &str) -> HashMap<Vec<Stroke>, String> {
+    let s = read_to_string(file_name).unwrap();
     let str = &s[0..s.len() - 1];
     //    print!("{str}");
     str.lines()
@@ -216,24 +212,23 @@ fn read_file() -> HashMap<Vec<Stroke>, String> {
             string_to_entry(s)
         })
         .collect()
-    //    Vec::new()
 }
 
-fn main() {
-    println!("\"SNAL/LO\": \"Hallo\"");
-    println!("{:?}", string_to_entry("\"SNAL/LO\": \"Hallo\""));
-    let dic = read_file();
-    println!("Finished");
-    let mut l: String = String::new();
-    loop {
-        stdin().read_line(&mut l).unwrap();
-        println!("{:?}", dic.get(&string_to_strokes(l.trim())));
-        //        println!(
-        //            "{:?}",
-        //            dic.iter()
-        //                .find(|(e, _)| *e == string_to_strokes(&(l.trim())))
-        //        );
-        l = "".to_owned();
-        l = "".to_owned();
-    }
-}
+//fn main() {
+//    println!("\"SNAL/LO\": \"Hallo\"");
+//    println!("{:?}", string_to_entry("\"SNAL/LO\": \"Hallo\""));
+//    let dic = read_file();
+//    println!("Finished");
+//    let mut l: String = String::new();
+//    loop {
+//        stdin().read_line(&mut l).unwrap();
+//        println!("{:?}", dic.get(&string_to_strokes(l.trim())));
+//        //        println!(
+//        //            "{:?}",
+//        //            dic.iter()
+//        //                .find(|(e, _)| *e == string_to_strokes(&(l.trim())))
+//        //        );
+//        l = "".to_owned();
+//        l = "".to_owned();
+//    }
+//}
